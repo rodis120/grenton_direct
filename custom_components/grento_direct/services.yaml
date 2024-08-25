@@ -1,0 +1,13 @@
+clu_request:
+  fields:
+    payload:
+      required: true
+      advanced: false
+      example: "req_restart"
+
+lua_request:
+  fields:
+    payload:
+      required: true
+      advanced: false
+      example: "checkAlive()"

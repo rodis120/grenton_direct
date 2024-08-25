@@ -1,0 +1,25 @@
+{
+    "title": "Grenton Direct",
+    "services": {
+        "clu_request": {
+            "name": "Send CLU request",
+            "description": "Sends a command to CLU.",
+            "fields": {
+                "payload": {
+                    "name": "Payload",
+                    "description": "The payload to send."
+                }
+            }
+        },
+        "lua_request": {
+            "name": "Send lua request",
+            "description": "Sends lua command to CLU.",
+            "fields": {
+                "payload": {
+                    "name": "Payload",
+                    "description": "The payload to send."
+                }
+            }
+        }
+    }
+}

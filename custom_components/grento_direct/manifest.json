@@ -1,0 +1,20 @@
+{
+  "domain": "grenton_direct",
+  "name": "Grenton Direct",
+  "config_flow": false,
+  "documentation": "https://github.com/rodis120/grenton_direct",
+  "issue_tracker": "https://github.com/rodis120/grenton_direct/issues",
+  "requirements": [
+    "pygrenton @ git+https://github.com/rodis120/pygrenton.git@main",
+    "tftpy==0.8.2"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@rodis120"
+  ],
+  "iot_class": "local_push",
+  "version": "0.1.0"
+}
