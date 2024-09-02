@@ -1,5 +1,4 @@
 {
-    "title": "Grenton Direct",
     "services": {
         "clu_request": {
             "name": "Send CLU request",
