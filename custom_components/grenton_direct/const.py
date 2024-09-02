@@ -8,6 +8,7 @@ CONF_REFRESH_INTERVAL = "refresh_interval"
 CONF_CLIENT_IP = "client_ip"
 CONF_CLIENT_PORT = "client_port"
 CONF_OBJ_ID = "object_id"
+CONF_INDEX = "index"
 
 GRENTON_API = "grenton_api"
 
