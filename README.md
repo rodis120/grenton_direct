@@ -52,6 +52,7 @@ _Integration to integrate with [grenton][grenton]._
     sensor:
       - platform: "grenton_direct"
         object_id: "PAN0453" # grenton object id
+        index: 0
         name: Smart panel
         device_class: temperature
         unit_of_measurement: "°C"
