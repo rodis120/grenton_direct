@@ -87,7 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def lua_request(call: ServiceCall) -> ServiceResponse:
         payload = call.data["payload"]
-        resp = await asyncio.to_thread(client._send_lua_request, payload)  # noqa: SLF001
+        resp = await asyncio.to_thread(client.send_lua_request, payload)
 
         return {"response": resp}
 
