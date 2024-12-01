@@ -44,6 +44,10 @@ _Integration to integrate with [grenton][grenton]._
         object_id: "DOU6708" # grenton object id
         name: Center light
 
+      - platform: "grenton_direct"
+        object_id: "LED1356" # grenton object id
+        name: LED strip
+
     cover:
       - platform: "grenton_direct"
         object_id: "ROL3875" # grenton object id
@@ -54,8 +58,15 @@ _Integration to integrate with [grenton][grenton]._
         object_id: "PAN0453" # grenton object id
         index: 0
         name: Smart panel
-        device_class: temperature
-        unit_of_measurement: "°C"
+        device_class: temperature # optional
+        unit_of_measurement: "°C" # optional
+
+    binary_sensor:
+      - platform: "grenton_direct"
+        object_id: "DIN2341"
+        index: 0
+        name: "Door sensor"
+        device_class: ... # optional 
     ```
 
 ## How to get grenton key and iv?
