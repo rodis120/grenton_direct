@@ -18,6 +18,7 @@ from .const import (
     DOMAIN,
     GRENTON_API,
 )
+from .utils import GrentonObject
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -49,23 +50,17 @@ async def async_setup_platform(
     )
 
 
-class GrentonBinarySensor(BinarySensorEntity):
+class GrentonBinarySensor(GrentonObject, BinarySensorEntity):
     """Representation of a GrentonBinarySensor."""
 
     def __init__(self, grenton_api: CluClient, config: ConfigType) -> None:
         """Init GrentonBinarySensor."""
-        self._api = grenton_api
-        self._object_id = config[CONF_OBJ_ID]
+        super().__init__(grenton_api, config)
         self._index = config.get(CONF_INDEX, 0)
-
-        self._attr_name = config[CONF_NAME]
-        self._attr_unique_id = DOMAIN + "." + self._object_id
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS, "")
 
-        self._api.register_value_change_handler(
-            self._object_id, self._index, self._update_handler
-        )
+        self.register_update_handler(self._index, self._update_handler)
 
     def _update_handler(self, ctx: UpdateContext) -> None:
         if ctx.value == 0:

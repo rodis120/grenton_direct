@@ -19,6 +19,7 @@ from .const import (
     DOMAIN,
     GRENTON_API,
 )
+from .utils import GrentonObject
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -58,23 +59,17 @@ async def async_setup_platform(
     add_entities([entity], update_before_add=True)
 
 
-class GrentonLight(LightEntity):
+class GrentonLight(GrentonObject, LightEntity):
     """Representation of a GrentonLoght."""
 
     def __init__(self, grenton_api: CluClient, config: ConfigType) -> None:
         """Init GrentonLight."""
-        super().__init__()
-        self._api = grenton_api
-        self._object_id = config[CONF_OBJ_ID]
+        super().__init__(grenton_api, config)
 
-        self._attr_name = config[CONF_NAME]
-        self._attr_unique_id = DOMAIN + "." + self._object_id
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
 
-        self._api.register_value_change_handler(
-            self._object_id, RELAY_STATE_INDEX, self._update_handler
-        )
+        self.register_update_handler(RELAY_STATE_INDEX, self._update_handler)
 
     def _update_handler(self, ctx: UpdateContext) -> None:
         self._attr_is_on = ctx.value
@@ -85,25 +80,21 @@ class GrentonLight(LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
-        await self._api.set_value_async(self._object_id, RELAY_STATE_INDEX, 1)
+        await self.set_value(RELAY_STATE_INDEX, 1)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Tunr off light."""
-        await self._api.set_value_async(self._object_id, RELAY_STATE_INDEX, 0)
+        await self.set_value(RELAY_STATE_INDEX, 0)
 
 
-class GrentonRGBW(LightEntity):
+class GrentonRGBW(GrentonObject, LightEntity):
     """Grenton RGBW module representation."""
 
     def __init__(self, grenton_api: CluClient, config: ConfigType) -> None:
         """Init GrentonRGBW."""
-        super().__init__()
-        self._api = grenton_api
-        self._object_id = config[CONF_OBJ_ID]
+        super().__init__(grenton_api, config)
 
-        self._attr_name = config[CONF_NAME]
-        self._attr_unique_id = DOMAIN + "." + self._object_id
         self._attr_color_mode = ColorMode.RGBW
         self._attr_supported_color_modes = {
             ColorMode.RGBW,
@@ -113,15 +104,8 @@ class GrentonRGBW(LightEntity):
 
         self._attr_rgbw_color = (0, 0, 0, 0)
 
-        self._api.register_value_change_handler(
-            self._object_id, HEX_COLOR_INDEX, self._update_handler
-        )
-        self._api.register_value_change_handler(
-            self._object_id, COLOR_WHITE_INDEX, self._update_handler
-        )
-        self._api.register_value_change_handler(
-            self._object_id, BRIGHTNESS_INDEX, self._update_handler
-        )
+        features = (HEX_COLOR_INDEX, COLOR_WHITE_INDEX, BRIGHTNESS_INDEX)
+        self.register_update_handler(features, self._update_handler)
 
     def _update_handler(self, ctx: UpdateContext) -> None:
         r, g, b, w = self._attr_rgbw_color or (0, 0, 0, 0)
@@ -151,16 +135,12 @@ class GrentonRGBW(LightEntity):
 
         if color:
             hex_color = "#{:02x}{:02x}{:02x}".format(*color[:3])
-            await self._api.execute_method_async(
-                self._object_id, HEX_COLOR_INDEX, hex_color
-            )
-            await self._api.execute_method_async(
-                self._object_id, SET_WHITE_INDEX, color[3]
-            )
+            await self.execute_method(HEX_COLOR_INDEX, hex_color)
+            await self.execute_method(SET_WHITE_INDEX, color[3])
+
         elif brightness:
-            await self._api.execute_method_async(
-                self._object_id, BRIGHTNESS_INDEX, brightness
-            )
+            await self.execute_method(BRIGHTNESS_INDEX, brightness)
+
         else:
             await self._api.execute_method_async(self._object_id, BRIGHTNESS_INDEX, 1)
 
