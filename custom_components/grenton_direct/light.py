@@ -133,6 +133,9 @@ class GrentonRGBW(GrentonObject, LightEntity):
     SET_WHITE_INDEX = 12
     BRIGHTNESS_INDEX = 0
 
+    RGBW_SWITCH_ON_INDEX = 9
+    RGBW_SWITCH_OFF_INDEX = 10
+
     def __init__(self, grenton_api: CluClient, config: ConfigType) -> None:
         """Init GrentonRGBW."""
         super().__init__(grenton_api, config)
@@ -184,11 +187,9 @@ class GrentonRGBW(GrentonObject, LightEntity):
             await self.execute_method(self.BRIGHTNESS_INDEX, brightness)
 
         else:
-            await self._api.execute_method_async(
-                self._object_id, self.BRIGHTNESS_INDEX, 1
-            )
+            await self.execute_method(self.RGBW_SWITCH_ON_INDEX, 0)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
-        await self._api.execute_method_async(self._object_id, self.BRIGHTNESS_INDEX, 0)
+        await self.execute_method(self.RGBW_SWITCH_OFF_INDEX, 0)
