@@ -31,17 +31,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_OBJ_ID): cv.string, vol.Required(CONF_NAME): cv.string}
 )
 
-ROLLER_SHUTER_STATE_INDEX = 0
-ROLLER_SHUTER_POSITION_INDEX = 7
-
-ROLLER_SHUTER_STATE_OPENING = 1
-ROLLER_SHUTER_STATE_CLOSING = 2
-
-ROLLER_SHUTER_OPEN_METHOD = 0
-ROLLER_SHUTER_CLOSE_METHOD = 1
-ROLLER_SHUTER_STOP_METHOD = 3
-ROLLER_SHUTER_SET_POSITION_METHOD = 10
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -57,6 +46,17 @@ async def async_setup_platform(
 class GrentonCover(GrentonObject, CoverEntity):
     """Grenton cover entity."""
 
+    ROLLER_SHUTER_STATE_INDEX = 0
+    ROLLER_SHUTER_POSITION_INDEX = 7
+
+    ROLLER_SHUTER_STATE_OPENING = 1
+    ROLLER_SHUTER_STATE_CLOSING = 2
+
+    ROLLER_SHUTER_OPEN_METHOD = 0
+    ROLLER_SHUTER_CLOSE_METHOD = 1
+    ROLLER_SHUTER_STOP_METHOD = 3
+    ROLLER_SHUTER_SET_POSITION_METHOD = 10
+
     def __init__(self, grenton_api: CluClient, config: ConfigType) -> None:
         """Init GrentonCover."""
         super().__init__(grenton_api, config)
@@ -70,16 +70,16 @@ class GrentonCover(GrentonObject, CoverEntity):
         )
 
         self.register_update_handler(
-            (ROLLER_SHUTER_STATE_INDEX, ROLLER_SHUTER_POSITION_INDEX),
+            (self.ROLLER_SHUTER_STATE_INDEX, self.ROLLER_SHUTER_POSITION_INDEX),
             self._update_handler,
         )
 
     def _update_handler(self, ctx: UpdateContext) -> None:
-        if ctx.index == ROLLER_SHUTER_STATE_INDEX:
-            self._attr_is_opening = ctx.value == ROLLER_SHUTER_STATE_OPENING
-            self._attr_is_closing = ctx.value == ROLLER_SHUTER_STATE_CLOSING
+        if ctx.index == self.ROLLER_SHUTER_STATE_INDEX:
+            self._attr_is_opening = ctx.value == self.ROLLER_SHUTER_STATE_OPENING
+            self._attr_is_closing = ctx.value == self.ROLLER_SHUTER_STATE_CLOSING
 
-        elif ctx.index == ROLLER_SHUTER_POSITION_INDEX:
+        elif ctx.index == self.ROLLER_SHUTER_POSITION_INDEX:
             self._attr_is_closed = ctx.value == 0
             self._attr_current_cover_position = ctx.value
 
@@ -89,21 +89,21 @@ class GrentonCover(GrentonObject, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         if not self._attr_is_opening:
-            await self.execute_method(ROLLER_SHUTER_OPEN_METHOD, 0)
+            await self.execute_method(self.ROLLER_SHUTER_OPEN_METHOD, 0)
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         if not self._attr_is_closing:
-            await self.execute_method(ROLLER_SHUTER_CLOSE_METHOD, 0)
+            await self.execute_method(self.ROLLER_SHUTER_CLOSE_METHOD, 0)
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
         pos = kwargs[ATTR_POSITION]
-        await self.execute_method(ROLLER_SHUTER_SET_POSITION_METHOD, pos)
+        await self.execute_method(self.ROLLER_SHUTER_SET_POSITION_METHOD, pos)
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-        await self.execute_method(self._object_id, ROLLER_SHUTER_STOP_METHOD, 0)
+        await self.execute_method(self.ROLLER_SHUTER_STOP_METHOD, 0)

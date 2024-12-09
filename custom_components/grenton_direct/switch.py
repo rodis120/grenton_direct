@@ -26,8 +26,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_OBJ_ID): cv.string, vol.Required(CONF_NAME): cv.string}
 )
 
-RELAY_STATE_INDEX = 0
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -43,11 +41,13 @@ async def async_setup_platform(
 class GrentonSwitch(GrentonObject, SwitchEntity):
     """Representation of a GrentonLoght."""
 
+    RELAY_STATE_INDEX = 0
+
     def __init__(self, grenton_api: CluClient, config: ConfigType) -> None:
         """Init GrentonSwitch."""
         super().__init__(grenton_api, config)
 
-        self.register_update_handler(RELAY_STATE_INDEX, self._update_handler)
+        self.register_update_handler(self.RELAY_STATE_INDEX, self._update_handler)
 
     def _update_handler(self, ctx: UpdateContext) -> None:
         self._attr_is_on = ctx.value
@@ -57,9 +57,9 @@ class GrentonSwitch(GrentonObject, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        await self.set_value(RELAY_STATE_INDEX, 1)
+        await self.set_value(self.RELAY_STATE_INDEX, 1)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Tunr switch off."""
-        await self.set_value(RELAY_STATE_INDEX, 0)
+        await self.set_value(self.RELAY_STATE_INDEX, 0)

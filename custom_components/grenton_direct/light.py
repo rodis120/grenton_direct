@@ -31,15 +31,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_OBJ_ID): cv.string, vol.Required(CONF_NAME): cv.string}
 )
 
-RELAY_STATE_INDEX = 0
-COLOR_RED_INDEX = 3
-COLOR_GREEN_INDEX = 4
-COLOR_BLUE_INDEX = 5
-COLOR_WHITE_INDEX = 15
-HEX_COLOR_INDEX = 6
-SET_WHITE_INDEX = 12
-BRIGHTNESS_INDEX = 0
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -64,6 +55,8 @@ async def async_setup_platform(
 class GrentonLight(GrentonObject, LightEntity):
     """Representation of a GrentonLoght."""
 
+    RELAY_STATE_INDEX = 0
+
     def __init__(self, grenton_api: CluClient, config: ConfigType) -> None:
         """Init GrentonLight."""
         super().__init__(grenton_api, config)
@@ -71,7 +64,7 @@ class GrentonLight(GrentonObject, LightEntity):
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
 
-        self.register_update_handler(RELAY_STATE_INDEX, self._update_handler)
+        self.register_update_handler(self.RELAY_STATE_INDEX, self._update_handler)
 
     def _update_handler(self, ctx: UpdateContext) -> None:
         self._attr_is_on = ctx.value
@@ -82,17 +75,18 @@ class GrentonLight(GrentonObject, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
-        await self.set_value(RELAY_STATE_INDEX, 1)
+        await self.set_value(self.RELAY_STATE_INDEX, 1)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Tunr off light."""
-        await self.set_value(RELAY_STATE_INDEX, 0)
+        await self.set_value(self.RELAY_STATE_INDEX, 0)
 
 
 class GrentonDimmer(GrentonObject, LightEntity):
     """Grenton Dimmer module representation."""
 
+    BRIGHTNESS_INDEX = 0
     DIMMER_SWITCH_ON_INDEX = 2
     DIMMER_SWITCH_OFF_INDEX = 3
 
@@ -106,7 +100,7 @@ class GrentonDimmer(GrentonObject, LightEntity):
             ColorMode.ONOFF,
         }
 
-        self.register_update_handler(BRIGHTNESS_INDEX, self._update_handler)
+        self.register_update_handler(self.BRIGHTNESS_INDEX, self._update_handler)
 
     def _update_handler(self, ctx: UpdateContext) -> None:
         self._attr_brightness = int(ctx.value * 255)
@@ -119,7 +113,7 @@ class GrentonDimmer(GrentonObject, LightEntity):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if brightness:
-            await self.set_value(BRIGHTNESS_INDEX, brightness / 255)
+            await self.set_value(self.BRIGHTNESS_INDEX, brightness / 255)
         else:
             await self.execute_method(self.DIMMER_SWITCH_ON_INDEX, 0)
 
@@ -130,6 +124,14 @@ class GrentonDimmer(GrentonObject, LightEntity):
 
 class GrentonRGBW(GrentonObject, LightEntity):
     """Grenton RGBW module representation."""
+
+    COLOR_RED_INDEX = 3
+    COLOR_GREEN_INDEX = 4
+    COLOR_BLUE_INDEX = 5
+    COLOR_WHITE_INDEX = 15
+    HEX_COLOR_INDEX = 6
+    SET_WHITE_INDEX = 12
+    BRIGHTNESS_INDEX = 0
 
     def __init__(self, grenton_api: CluClient, config: ConfigType) -> None:
         """Init GrentonRGBW."""
@@ -144,22 +146,22 @@ class GrentonRGBW(GrentonObject, LightEntity):
 
         self._attr_rgbw_color = (0, 0, 0, 0)
 
-        features = (HEX_COLOR_INDEX, COLOR_WHITE_INDEX, BRIGHTNESS_INDEX)
+        features = (self.HEX_COLOR_INDEX, self.COLOR_WHITE_INDEX, self.BRIGHTNESS_INDEX)
         self.register_update_handler(features, self._update_handler)
 
     def _update_handler(self, ctx: UpdateContext) -> None:
         r, g, b, w = self._attr_rgbw_color or (0, 0, 0, 0)
 
-        if ctx.index == HEX_COLOR_INDEX:
+        if ctx.index == self.HEX_COLOR_INDEX:
             hex_color = ctx.value
             r = int(hex_color[1:3], base=16)
             g = int(hex_color[3:5], base=16)
             b = int(hex_color[5:7], base=16)
 
             self._attr_rgbw_color = (r, g, b, w)
-        elif ctx.index == COLOR_WHITE_INDEX:
+        elif ctx.index == self.COLOR_WHITE_INDEX:
             self._attr_rgbw_color = (r, g, b, ctx.value)
-        elif ctx.index == BRIGHTNESS_INDEX:
+        elif ctx.index == self.BRIGHTNESS_INDEX:
             self._attr_brightness = ctx.value
             self._attr_is_on = ctx.value != 0
         else:
@@ -175,16 +177,18 @@ class GrentonRGBW(GrentonObject, LightEntity):
 
         if color:
             hex_color = "#{:02x}{:02x}{:02x}".format(*color[:3])
-            await self.execute_method(HEX_COLOR_INDEX, hex_color)
-            await self.execute_method(SET_WHITE_INDEX, color[3])
+            await self.execute_method(self.HEX_COLOR_INDEX, hex_color)
+            await self.execute_method(self.SET_WHITE_INDEX, color[3])
 
         elif brightness:
-            await self.execute_method(BRIGHTNESS_INDEX, brightness)
+            await self.execute_method(self.BRIGHTNESS_INDEX, brightness)
 
         else:
-            await self._api.execute_method_async(self._object_id, BRIGHTNESS_INDEX, 1)
+            await self._api.execute_method_async(
+                self._object_id, self.BRIGHTNESS_INDEX, 1
+            )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
-        await self._api.execute_method_async(self._object_id, BRIGHTNESS_INDEX, 0)
+        await self._api.execute_method_async(self._object_id, self.BRIGHTNESS_INDEX, 0)
