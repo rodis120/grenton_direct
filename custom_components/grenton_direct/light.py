@@ -53,6 +53,8 @@ async def async_setup_platform(
     device_prefix = config[CONF_OBJ_ID][:3]
     if device_prefix == "LED":
         entity = GrentonRGBW(grenton_api, config)
+    elif device_prefix == "DIM":
+        entity = GrentonDimmer(grenton_api, config)
     else:
         entity = GrentonLight(grenton_api, config)
 
@@ -86,6 +88,44 @@ class GrentonLight(GrentonObject, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Tunr off light."""
         await self.set_value(RELAY_STATE_INDEX, 0)
+
+
+class GrentonDimmer(GrentonObject, LightEntity):
+    """Grenton Dimmer module representation."""
+
+    DIMMER_SWITCH_ON_INDEX = 2
+    DIMMER_SWITCH_OFF_INDEX = 3
+
+    def __init__(self, grenton_api: CluClient, config: ConfigType) -> None:
+        """Init GrentonDimmer."""
+        super().__init__(grenton_api, config)
+
+        self._attr_color_mode = ColorMode.BRIGHTNESS
+        self._attr_supported_color_modes = {
+            ColorMode.BRIGHTNESS,
+            ColorMode.ONOFF,
+        }
+
+        self.register_update_handler(BRIGHTNESS_INDEX, self._update_handler)
+
+    def _update_handler(self, ctx: UpdateContext) -> None:
+        self._attr_brightness = int(ctx.value * 255)
+        self._attr_is_on = ctx.value > 0
+
+        self.schedule_update_ha_state()
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+
+        if brightness:
+            await self.set_value(BRIGHTNESS_INDEX, brightness / 255)
+        else:
+            await self.execute_method(self.DIMMER_SWITCH_ON_INDEX, 0)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.execute_method(self.DIMMER_SWITCH_OFF_INDEX, 0)
 
 
 class GrentonRGBW(GrentonObject, LightEntity):
