@@ -1,16 +1,13 @@
 """Utils used by grenton_direct integration."""
 
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable, Iterable
+from typing import Any
 
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.typing import ConfigType
+from pygrenton.clu_client import CluClient, UpdateContext
 
 from .const import CONF_OBJ_ID, DOMAIN
-
-if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
-
-    from homeassistant.helpers.typing import ConfigType
-    from pygrenton.clu_client import CluClient, UpdateContext
 
 
 class GrentonObject:
@@ -32,7 +29,7 @@ class GrentonObject:
 
     async def execute_method(self, index: int, *args: Any) -> Any:
         """Execute object's method."""
-        return await self._api.execute_method_async(self._object_id, index, args)
+        return await self._api.execute_method_async(self._object_id, index, *args)
 
     async def set_value(self, index: int, value: Any) -> None:
         """Set value of a feature."""
