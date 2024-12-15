@@ -95,10 +95,7 @@ class GrentonDimmer(GrentonObject, LightEntity):
         super().__init__(grenton_api, config)
 
         self._attr_color_mode = ColorMode.BRIGHTNESS
-        self._attr_supported_color_modes = {
-            ColorMode.BRIGHTNESS,
-            ColorMode.ONOFF,
-        }
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
         self.register_update_handler(self.BRIGHTNESS_INDEX, self._update_handler)
 
@@ -141,11 +138,7 @@ class GrentonRGBW(GrentonObject, LightEntity):
         super().__init__(grenton_api, config)
 
         self._attr_color_mode = ColorMode.RGBW
-        self._attr_supported_color_modes = {
-            ColorMode.RGBW,
-            ColorMode.BRIGHTNESS,
-            ColorMode.ONOFF,
-        }
+        self._attr_supported_color_modes = {ColorMode.RGBW}
 
         self._attr_rgbw_color = (0, 0, 0, 0)
 
