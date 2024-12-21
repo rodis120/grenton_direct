@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Any, override
 
 import homeassistant.helpers.config_validation as cv
@@ -122,16 +123,22 @@ class GrentonDimmer(GrentonObject, LightEntity):
 class GrentonRGBW(GrentonObject, LightEntity):
     """Grenton RGBW module representation."""
 
+    # feature indexes
+    BRIGHTNESS_INDEX = 0
     COLOR_RED_INDEX = 3
     COLOR_GREEN_INDEX = 4
     COLOR_BLUE_INDEX = 5
-    COLOR_WHITE_INDEX = 15
     HEX_COLOR_INDEX = 6
-    SET_WHITE_INDEX = 12
-    BRIGHTNESS_INDEX = 0
+    COLOR_WHITE_INDEX = 15
 
-    RGBW_SWITCH_ON_INDEX = 9
-    RGBW_SWITCH_OFF_INDEX = 10
+    # method indexes
+    SET_BRIGHTNESS_INDEX = 0
+    SET_RED_INDEX = 3
+    SET_GREEN_INDEX = 4
+    SET_BLUE_INDEX = 5
+    SWITCH_ON_INDEX = 9
+    SWITCH_OFF_INDEX = 10
+    SET_WHITE_INDEX = 12
 
     def __init__(self, grenton_api: CluClient, config: ConfigType) -> None:
         """Init GrentonRGBW."""
@@ -158,8 +165,7 @@ class GrentonRGBW(GrentonObject, LightEntity):
         elif ctx.index == self.COLOR_WHITE_INDEX:
             self._attr_rgbw_color = (r, g, b, ctx.value or 0)
         elif ctx.index == self.BRIGHTNESS_INDEX:
-            self._attr_brightness = ctx.value
-            self._attr_is_on = ctx.value != 0
+            self._attr_brightness = int(ctx.value * 255)
         else:
             return
 
@@ -169,20 +175,23 @@ class GrentonRGBW(GrentonObject, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set RGBW color."""
         color = kwargs.get(ATTR_RGBW_COLOR)
-        brightness = kwargs.get(ATTR_BRIGHTNESS, 0) / 255
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if color:
-            hex_color = "#{:02x}{:02x}{:02x}".format(*color[:3])
-            await self.execute_method(self.HEX_COLOR_INDEX, hex_color)
-            await self.execute_method(self.SET_WHITE_INDEX, color[3])
+            await asyncio.gather(
+                self.execute_method(self.SET_RED_INDEX, color[0]),
+                self.execute_method(self.SET_GREEN_INDEX, color[1]),
+                self.execute_method(self.SET_BLUE_INDEX, color[2]),
+                self.execute_method(self.SET_WHITE_INDEX, color[3]),
+            )
 
         elif brightness:
-            await self.execute_method(self.BRIGHTNESS_INDEX, brightness)
+            await self.execute_method(self.BRIGHTNESS_INDEX, brightness / 255)
 
         else:
-            await self.execute_method(self.RGBW_SWITCH_ON_INDEX, 0)
+            await self.execute_method(self.SWITCH_ON_INDEX, 0)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
-        await self.execute_method(self.RGBW_SWITCH_OFF_INDEX, 0)
+        await self.execute_method(self.SWITCH_OFF_INDEX, 0)
