@@ -166,6 +166,7 @@ class GrentonRGBW(GrentonObject, LightEntity):
             self._attr_rgbw_color = (r, g, b, ctx.value or 0)
         elif ctx.index == self.BRIGHTNESS_INDEX:
             self._attr_brightness = int(ctx.value * 255)
+            self._attr_is_on = ctx.value > 0
         else:
             return
 
