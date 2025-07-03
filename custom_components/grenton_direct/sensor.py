@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import homeassistant.helpers.config_validation as cv
@@ -17,6 +18,7 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIT_OF_MEASU
 from .const import (
     CONF_INDEX,
     CONF_OBJ_ID,
+    CONF_POLLING,
     DOMAIN,
     GRENTON_API,
 )
@@ -36,8 +38,11 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_POLLING): cv.boolean,
     }
 )
+
+SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_platform(
@@ -65,10 +70,16 @@ class GrentonSensor(GrentonObject, SensorEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS, "")
         self._attr_state_class = config.get(CONF_STATE_CLASS, "measurement")
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT, "")
+        self.should_poll = config.get(CONF_POLLING, True)
 
-        self.register_update_handler(self._index, self._update_handler)
+        if not self.should_poll:
+            self.register_update_handler(self._index, self._update_handler)
 
     def _update_handler(self, ctx: UpdateContext) -> None:
         self._attr_native_value = ctx.value
 
         self.schedule_update_ha_state()
+
+    async def async_update(self) -> None:  # noqa: D102
+        value = await self.get_value(self._index)
+        self._attr_native_value = value
